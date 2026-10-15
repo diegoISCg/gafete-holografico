@@ -2,54 +2,75 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Gafete AR | Bodega Ramírez</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Gafete holográfico AR | Bodega Ramírez</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 <style>
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif}
-#hint{position:fixed;top:12px;left:12px;right:12px;z-index:10;background:rgba(4,21,40,.88);color:white;padding:12px;border:1px solid #4bdcff;border-radius:10px;text-align:center;font-size:14px;pointer-events:none}
-#hint small{display:block;color:#a8dcea;margin-top:4px}
+ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080f19;font-family:Arial,Helvetica,sans-serif}
+ #aviso{position:fixed;z-index:20;left:12px;right:12px;top:12px;padding:12px 15px;background:rgba(3,17,36,.88);border:1px solid #44dcff;border-radius:12px;color:#fff;text-align:center;font-size:14px;pointer-events:none}
+ #aviso small{display:block;color:#9cddf3;margin-top:5px}
+ #estado{position:fixed;z-index:20;bottom:14px;left:12px;right:12px;text-align:center;color:#d2f6ff;background:rgba(3,17,36,.75);padding:8px;border-radius:8px;font-size:12px;pointer-events:none}
+ .a-enter-vr,.a-enter-ar,.a-enter-vr-button{display:none!important}
 </style>
 </head>
 <body>
-<div id="hint">Apunta al marcador HIRO impreso en el reverso del gafete<small>Permite la cámara y mantén el marcador completo y bien iluminado.</small></div>
-<a-scene embedded vr-mode-ui="enabled:false" renderer="logarithmicDepthBuffer:true;antialias:true;alpha:true" arjs="sourceType:webcam;debugUIEnabled:false;trackingMethod:best;" >
-  <a-marker preset="hiro" id="badgeMarker" emitevents="true">
-    <!-- Tarjeta horizontal sobre el marcador, elevada para evitar parpadeo. -->
-    <a-entity id="hologram" position="0 0.16 0" rotation="-90 0 0" scale="0.001 0.001 0.001"
-      animation__open="property:scale;to:1 1 1;dur:850;easing:easeOutBack;startEvents:openHologram"
-      animation__close="property:scale;to:0.001 0.001 0.001;dur:250;startEvents:closeHologram">
-      <a-plane width="1.5" height="1.5" material="color:#061b34;opacity:0.88;transparent:true;side:double" position="0 0 0"></a-plane>
-      <a-plane width="1.49" height="0.012" position="0 0.73 0.012" material="color:#4deaff;shader:flat"></a-plane>
-      <a-plane width="1.49" height="0.012" position="0 -0.73 0.012" material="color:#4deaff;shader:flat"></a-plane>
-      <a-plane width="0.012" height="1.47" position="-0.73 0 0.012" material="color:#4deaff;shader:flat"></a-plane>
-      <a-plane width="0.012" height="1.47" position="0.73 0 0.012" material="color:#4deaff;shader:flat"></a-plane>
-      <a-text value="BODEGA RAMIREZ" align="center" color="#57eeff" width="2.4" position="0 0.55 0.055" side="double"></a-text>
-      <a-text value="IDENTIFICACION DIGITAL" align="center" color="#a5e8ff" width="1.7" position="0 0.37 0.055" side="double"></a-text>
-      <a-text value="DIEGO GARCIA CASTILLO" align="center" color="#ffffff" width="1.85" position="0 0.16 0.055" side="double"></a-text>
-      <a-text value="AREA: SISTEMAS" align="center" color="#57eeff" width="2.15" position="0 -0.05 0.055" side="double"></a-text>
-      <a-text value="EDAD: 28 ANOS" align="center" color="#ffffff" width="1.95" position="0 -0.24 0.055" side="double"></a-text>
-      <a-text value="TIPO DE SANGRE: O+" align="center" color="#ffffff" width="1.95" position="0 -0.41 0.055" side="double"></a-text>
-      <a-text value="INGRESO: 16/DIC/2026" align="center" color="#ffffff" width="1.95" position="0 -0.58 0.055" side="double"></a-text>
-      <a-plane width="1.38" height="0.018" position="0 -0.66 0.08" material="color:#49efff;opacity:0.7;transparent:true;shader:flat;depthTest:false"
-        animation__scan="property:position;from:0 -0.66 0.08;to:0 0.67 0.08;dur:2400;loop:true;dir:alternate;easing:linear"></a-plane>
+<div id="aviso">Apunta al marcador HIRO<small>Permite usar la cámara y mantén el marcador completo a la vista.</small></div>
+<div id="estado">Buscando marcador…</div>
+<a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" renderer="antialias: true; alpha: true; colorManagement: true" loading-screen="enabled: false">
+  <a-marker preset="hiro" id="marcador" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+    <!-- Se eleva ligeramente del papel y se orienta hacia arriba -->
+    <a-entity id="holograma" position="0 0.09 0" rotation="-90 0 0" scale="0.001 0.001 0.001">
+      <!-- Panel oscuro semitransparente -->
+      <a-plane width="1.55" height="1.47" material="color:#061a36;opacity:0.83;transparent:true;side:double;depthWrite:false" position="0 0 0"></a-plane>
+      <a-plane width="1.60" height="1.51" material="color:#36dfff;opacity:0.12;transparent:true;side:double;depthWrite:false" position="0 0 -0.009"></a-plane>
+      <!-- Bordes de luz -->
+      <a-box width="1.55" height="0.015" depth="0.007" position="0 0.735 0.035" material="color:#50eeff;shader:flat"></a-box>
+      <a-box width="1.55" height="0.015" depth="0.007" position="0 -0.735 0.035" material="color:#50eeff;shader:flat"></a-box>
+      <a-box width="0.015" height="1.47" depth="0.007" position="-0.775 0 0.035" material="color:#50eeff;shader:flat"></a-box>
+      <a-box width="0.015" height="1.47" depth="0.007" position="0.775 0 0.035" material="color:#50eeff;shader:flat"></a-box>
+      <!-- IMPORTANTE: textos siempre visibles, sin animar su opacidad -->
+      <a-text value="BODEGA RAMIREZ" align="center" anchor="center" baseline="center" color="#4deaff" width="2.6" position="0 0.58 0.09" material="shader:flat;depthTest:false"></a-text>
+      <a-text value="DIEGO GARCIA CASTILLO" align="center" anchor="center" baseline="center" color="#ffffff" width="2.05" position="0 0.35 0.09" material="shader:flat;depthTest:false"></a-text>
+      <a-text value="AREA: SISTEMAS" align="center" anchor="center" baseline="center" color="#4deaff" width="2.35" position="0 0.13 0.09" material="shader:flat;depthTest:false"></a-text>
+      <a-box width="1.28" height="0.007" depth="0.005" position="0 0.01 0.07" material="color:#35a5c8;shader:flat"></a-box>
+      <a-text value="EDAD: 28 ANOS" align="center" anchor="center" baseline="center" color="#ffffff" width="2.35" position="0 -0.13 0.09" material="shader:flat;depthTest:false"></a-text>
+      <a-text value="TIPO DE SANGRE: O+" align="center" anchor="center" baseline="center" color="#ffffff" width="2.35" position="0 -0.34 0.09" material="shader:flat;depthTest:false"></a-text>
+      <a-text value="INGRESO: 16/DIC/2026" align="center" anchor="center" baseline="center" color="#ffffff" width="2.35" position="0 -0.55 0.09" material="shader:flat;depthTest:false"></a-text>
+      <!-- Barra animada de escaneo, detrás de las letras -->
+      <a-plane width="1.42" height="0.018" position="0 -0.67 0.055" material="color:#47eaff;opacity:0.75;transparent:true;shader:flat;depthWrite:false" animation="property:position;from:0 -0.67 0.055;to:0 0.67 0.055;dur:2600;loop:true;dir:alternate;easing:linear"></a-plane>
     </a-entity>
   </a-marker>
   <a-entity camera></a-entity>
 </a-scene>
 <script>
-const marker=document.getElementById('badgeMarker');
-const hologram=document.getElementById('hologram');
-const hint=document.getElementById('hint');
-marker.addEventListener('markerFound',()=>{
-  hint.style.display='none';
-  hologram.emit('openHologram');
-});
-marker.addEventListener('markerLost',()=>{
-  hint.style.display='block';
-  hologram.setAttribute('scale','0.001 0.001 0.001');
-});
+(function(){
+  const marcador=document.getElementById('marcador');
+  const holograma=document.getElementById('holograma');
+  const aviso=document.getElementById('aviso');
+  const estado=document.getElementById('estado');
+  let animacion=0;
+  marcador.addEventListener('markerFound',function(){
+    aviso.style.display='none';
+    estado.textContent='Marcador reconocido · holograma activo';
+    holograma.object3D.scale.set(0.001,0.001,0.001);
+    cancelAnimationFrame(animacion);
+    const inicio=performance.now();
+    function aparecer(ahora){
+      const t=Math.min(1,(ahora-inicio)/900);
+      const suave=1-Math.pow(1-t,3);
+      const escala=Math.max(0.001,suave);
+      holograma.object3D.scale.set(escala,escala,escala);
+      if(t<1 && marcador.object3D.visible) animacion=requestAnimationFrame(aparecer);
+    }
+    animacion=requestAnimationFrame(aparecer);
+  });
+  marcador.addEventListener('markerLost',function(){
+    cancelAnimationFrame(animacion);
+    aviso.style.display='block';
+    estado.textContent='Buscando marcador…';
+  });
+})();
 </script>
 </body>
 </html>
