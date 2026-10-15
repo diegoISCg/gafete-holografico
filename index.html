@@ -1,26 +1,78 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Gafete AR | Bodega Ramírez</title>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gafete holográfico AR | Bodega Ramírez</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#091324;font-family:Arial,sans-serif}#status{position:fixed;z-index:50;left:12px;right:12px;top:12px;padding:12px;color:#fff;text-align:center;background:#071c35dd;border:1px solid #39dfff;border-radius:10px;font-size:14px;pointer-events:none}.a-enter-vr,.a-enter-ar,.a-enter-vr-button{display:none!important}</style></head><body>
-<div id="status">Buscando marcador HIRO…<br><small>Apunta la cámara al marcador completo.</small></div>
-<a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; alpha: true" loading-screen="enabled:false">
-<a-marker id="marker" preset="hiro" emitevents="true"><a-entity id="holder" position="0 0.035 0" rotation="-90 0 0"><a-plane id="card" width="0.72" height="0.72" material="side:double;transparent:true;depthWrite:false"></a-plane></a-entity></a-marker><a-entity camera></a-entity></a-scene>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#091324;font-family:Arial,sans-serif}
+#status{position:fixed;z-index:50;left:10px;right:10px;top:10px;padding:9px;color:#fff;text-align:center;background:#071c35dd;border:1px solid #39dfff;border-radius:10px;font-size:12px;pointer-events:none}
+.a-enter-vr,.a-enter-ar,.a-enter-vr-button{display:none!important}
+</style>
+</head>
+<body>
+<div id="status">Buscando marcador HIRO… Apunta la cámara al marcador completo.</div>
+<a-scene embedded vr-mode-ui="enabled:false" arjs="sourceType:webcam;debugUIEnabled:false;" renderer="antialias:true;alpha:true" loading-screen="enabled:false">
+  <a-marker id="marker" preset="hiro" emitevents="true">
+    <!-- 0.30 unidades: el panel ocupa aproximadamente el 30% del ancho del marcador. -->
+    <a-entity id="holder" position="0 0.04 0" rotation="-90 0 0">
+      <a-plane id="card" width="0.30" height="0.39" material="side:double;transparent:true;depthWrite:false"></a-plane>
+    </a-entity>
+  </a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
 <script>
 (function(){
-const marker=document.getElementById('marker'), holder=document.getElementById('holder'), status=document.getElementById('status');
-const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;const ctx=canvas.getContext('2d');
-function text(s,y,size,color){ctx.fillStyle=color;ctx.font='bold '+size+'px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=color;ctx.shadowBlur=12;ctx.fillText(s,512,y,950);ctx.shadowBlur=0;}
-function draw(t){const w=1024,h=1024;ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(3,18,44,0.84)';ctx.fillRect(20,20,984,984);ctx.strokeStyle='#45eaff';ctx.lineWidth=12;ctx.shadowColor='#45eaff';ctx.shadowBlur=18;ctx.strokeRect(26,26,972,972);ctx.shadowBlur=0;
-ctx.fillStyle='#ffd22b';ctx.fillRect(38,44,948,12);text('BODEGA RAMIREZ',135,57,'#ffd22b');
-ctx.strokeStyle='#39e6ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(110,205);ctx.lineTo(914,205);ctx.stroke();
-text('DIEGO GARCIA CASTILLO',285,57,'#ffffff');text('AREA: SISTEMAS',400,55,'#48eaff');
-text('EDAD: 28 ANOS',535,53,'#ffffff');text('TIPO DE SANGRE: O+',655,53,'#ffffff');text('INGRESO: 16/DIC/2026',775,49,'#ffffff');
-const y=850+(t%2400)/2400*95;ctx.fillStyle='rgba(64,238,255,0.28)';ctx.fillRect(48,y,928,16);ctx.fillStyle='#43edff';ctx.fillRect(48,y+5,928,4);text('IDENTIFICACION HOLOGRAFICA',955,32,'#50eaff');}
-let texture, plane, ready=false;
-function setup(){if(ready||!window.THREE)return;plane=document.getElementById('card');if(!plane.object3D)return;draw(0);texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const mesh=plane.getObject3D('mesh');if(!mesh)return;mesh.material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,depthWrite:false});ready=true;}
-document.querySelector('a-scene').addEventListener('loaded',setup);document.getElementById('card').addEventListener('loaded',setup);
-marker.addEventListener('markerFound',()=>{status.textContent='HIRO detectado · Datos holograficos activos';});marker.addEventListener('markerLost',()=>{status.textContent='Buscando marcador HIRO…';});
-function tick(t){if(!ready)setup();if(ready&&marker.object3D.visible){draw(t);texture.needsUpdate=true;}requestAnimationFrame(tick);}requestAnimationFrame(tick);
+'use strict';
+const marker=document.getElementById('marker');
+const card=document.getElementById('card');
+const status=document.getElementById('status');
+const canvas=document.createElement('canvas');
+canvas.width=768;canvas.height=1000;
+const ctx=canvas.getContext('2d');
+let texture=null,ready=false;
+function line(str,y,size,color){
+  ctx.save();ctx.fillStyle=color;ctx.font='bold '+size+'px Arial, sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor=color;ctx.shadowBlur=5;
+  ctx.fillText(str,384,y,688);ctx.restore();
+}
+function draw(time){
+  ctx.clearRect(0,0,768,1000);
+  ctx.fillStyle='rgba(3,18,44,.91)';ctx.fillRect(12,12,744,976);
+  ctx.strokeStyle='#45eaff';ctx.lineWidth=8;ctx.shadowColor='#45eaff';ctx.shadowBlur=10;
+  ctx.strokeRect(16,16,736,968);ctx.shadowBlur=0;
+  ctx.fillStyle='#ffd22b';ctx.fillRect(26,28,716,12);
+  line('BODEGA RAMÍREZ',112,51,'#ffd22b');
+  ctx.strokeStyle='#39e6ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(65,172);ctx.lineTo(703,172);ctx.stroke();
+  line('DIEGO GARCÍA',248,58,'#ffffff');
+  line('CASTILLO',317,58,'#ffffff');
+  line('ÁREA: SISTEMAS',421,52,'#48eaff');
+  line('EDAD: 28 AÑOS',541,46,'#ffffff');
+  line('SANGRE: O+',636,49,'#ffffff');
+  line('INGRESO: 16/DIC/2026',730,43,'#ffffff');
+  const y=790+(time%2500)/2500*105;
+  ctx.fillStyle='rgba(64,238,255,.13)';ctx.fillRect(35,y,698,14);
+  ctx.fillStyle='#43edff';ctx.fillRect(35,y+5,698,3);
+  line('IDENTIFICACIÓN HOLOGRÁFICA',943,27,'#50eaff');
+}
+function setup(){
+  if(ready||!window.THREE)return;
+  const mesh=card.getObject3D('mesh');if(!mesh)return;
+  draw(0);
+  texture=new THREE.CanvasTexture(canvas);
+  if('colorSpace' in texture && THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;
+  mesh.material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,depthWrite:false});
+  ready=true;
+}
+card.addEventListener('loaded',setup);
+document.querySelector('a-scene').addEventListener('loaded',setup);
+marker.addEventListener('markerFound',()=>{status.textContent='HIRO detectado · Datos holográficos activos';});
+marker.addEventListener('markerLost',()=>{status.textContent='Buscando marcador HIRO…';});
+function tick(t){if(!ready)setup();if(ready&&marker.object3D.visible){draw(t);texture.needsUpdate=true;}requestAnimationFrame(tick);}
+requestAnimationFrame(tick);
 })();
-</script></body></html>
+</script>
+</body>
+</html>
